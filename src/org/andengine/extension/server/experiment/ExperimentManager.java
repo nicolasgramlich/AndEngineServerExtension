@@ -15,6 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.andengine.extension.server.experiment.exception.ExperimentException;
 import org.andengine.extension.server.experiment.exception.ExperimentNotFoundException;
 import org.andengine.extension.server.experiment.exception.ExperimentTypeException;
+import org.andengine.extension.server.util.constants.ServerConstants;
 import org.andengine.util.StreamUtils;
 import org.andengine.util.call.Callback;
 import org.andengine.util.debug.Debug;
@@ -49,7 +50,7 @@ import android.telephony.TelephonyManager;
  * @author Nicolas Gramlich
  * @since 00:25:13 - 22.03.2013
  */
-public class ExperimentManager {
+public class ExperimentManager implements ServerConstants {
 	// ===========================================================
 	// Constants
 	// ===========================================================
@@ -356,7 +357,7 @@ public class ExperimentManager {
 
 				final List<NameValuePair> params = this.getParameters();
 
-				final URI uri = new URI(this.mServerURL + "?" + URLEncodedUtils.format(params, "utf-8"));
+				final URI uri = new URI(this.mServerURL + SERVER_ENDPOINT_EXPERIMENTS + "?" + URLEncodedUtils.format(params, "utf-8"));
 				final HttpGet httpGet = new HttpGet(uri);
 
 				final HttpResponse response = httpClient.execute(httpGet);
@@ -385,23 +386,23 @@ public class ExperimentManager {
 	protected List<NameValuePair> getParameters() {
 		final List<NameValuePair> params = new ArrayList<NameValuePair>();
 
-		params.add(new BasicNameValuePair("uuid", this.mUUID.toString()));
-		params.add(new BasicNameValuePair("app_id", this.mPackageName));
-		params.add(new BasicNameValuePair("app_version", String.valueOf(this.mPackageVersionCode)));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_UUID, this.mUUID.toString()));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_APP_ID, this.mPackageName));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_APP_VERSION, String.valueOf(this.mPackageVersionCode)));
 
-		params.add(new BasicNameValuePair("os_version", String.valueOf(Build.VERSION.SDK_INT)));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_OS_VERSION, String.valueOf(Build.VERSION.SDK_INT)));
 
-		params.add(new BasicNameValuePair("device_manufacturer", Build.MANUFACTURER));
-		params.add(new BasicNameValuePair("device_name", Build.DEVICE));
-		params.add(new BasicNameValuePair("device_brand", Build.BRAND));
-		params.add(new BasicNameValuePair("device_product", Build.PRODUCT));
-		params.add(new BasicNameValuePair("device_model", Build.MODEL));
-		params.add(new BasicNameValuePair("device_build", Build.DISPLAY));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_MANUFACTURER, Build.MANUFACTURER));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_NAME, Build.DEVICE));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_BRAND, Build.BRAND));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_PRODUCT, Build.PRODUCT));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_MODEL, Build.MODEL));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_BUILD, Build.DISPLAY));
 		final Locale locale = Locale.getDefault();
-		params.add(new BasicNameValuePair("device_locale_country", locale.getCountry()));
-		params.add(new BasicNameValuePair("device_locale_language", locale.getLanguage()));
-		params.add(new BasicNameValuePair("device_network_operator", this.mNetworkOperatorName));
-		params.add(new BasicNameValuePair("device_sim_operator", this.mSimOperatorName));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_LOCALE_COUNTRY, locale.getCountry()));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_LOCALE_LANGUAGE, locale.getLanguage()));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_NETWORK_OPERATOR, this.mNetworkOperatorName));
+		params.add(new BasicNameValuePair(SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_SIM_OPERATOR, this.mSimOperatorName));
 
 		return params;
 	}
