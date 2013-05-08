@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.andengine.extension.server.gcm.util.constants.GCMConstants;
 import org.andengine.util.math.MathUtils;
@@ -59,11 +60,13 @@ public final class GCMServerUtils implements GCMConstants {
 	// Methods
 	// ===========================================================
 
-	public static boolean register(final Context pContext, final String pServerURL, final String pGCMRegistrationID) {
-		final String serverUrl = pServerURL + SERVER_ENDPOINT_REGISTER;
+	public static boolean register(final Context pContext, final String pServerURL, final UUID pUUID, final String pAppID, final String pGCMRegistrationID) {
+		final String serverUrl = pServerURL + SERVER_ENDPOINT_GCM_REGISTER;
 
 		final Map<String, String> params = new HashMap<String, String>();
-		params.put(GCMServerUtils.SERVER_ENDPOINT_REGISTER_PARAMETER_REGISTRATIONID, pGCMRegistrationID);
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_UUID, pUUID.toString());
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_APP_ID, pAppID);
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_GCM_REGISTRATION_ID, pGCMRegistrationID);
 
 		long backoff = GCMServerUtils.RERTY_BACKOFF_MILLISECONDS + MathUtils.random(1000);
 
@@ -87,11 +90,13 @@ public final class GCMServerUtils implements GCMConstants {
 		return false;
 	}
 
-	public static boolean unregister(final Context pContext, final String pServerURL, final String pGCMRegistrationID) {
-		final String serverUrl = pServerURL + SERVER_ENDPOINT_UNREGISTER;
+	public static boolean unregister(final Context pContext, final String pServerURL, final UUID pUUID, final String pAppID, final String pGCMRegistrationID) {
+		final String serverUrl = pServerURL + SERVER_ENDPOINT_GCM_UNREGISTER;
 
 		final Map<String, String> params = new HashMap<String, String>();
-		params.put(GCMServerUtils.SERVER_ENDPOINT_UNREGISTER_PARAMETER_REGISTRATIONID, pGCMRegistrationID);
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_UUID, pUUID.toString());
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_APP_ID, pAppID);
+		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_GCM_REGISTRATION_ID, pGCMRegistrationID);
 
 		try {
 			GCMServerUtils.post(serverUrl, params);

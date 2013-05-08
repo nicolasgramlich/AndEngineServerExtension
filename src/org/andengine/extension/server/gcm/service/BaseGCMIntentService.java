@@ -1,5 +1,7 @@
 package org.andengine.extension.server.gcm.service;
 
+import java.util.UUID;
+
 import org.andengine.extension.server.gcm.util.GCMServerUtils;
 import org.andengine.extension.server.gcm.util.GCMUtils;
 import org.andengine.extension.server.gcm.util.constants.GCMConstants;
@@ -30,6 +32,8 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 	// ===========================================================
 
 	private String mServerURL;
+	private UUID mUUID;
+	private String mAppID;
 
 	// ===========================================================
 	// Constructors
@@ -40,9 +44,7 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 	}
 
 	public BaseGCMIntentService(final String pServerURL) throws IllegalClassNameException {
-		this.mServerURL = pServerURL;
-
-		this.ensureClassName();
+		this(pServerURL, (String[]) null);
 	}
 
 	public BaseGCMIntentService(final String ... pSenderIds) throws IllegalClassNameException {
@@ -50,10 +52,24 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 	}
 
 	public BaseGCMIntentService(final String pServerURL, final String ... pSenderIds) throws IllegalClassNameException {
+		this(pServerURL, null, null, pSenderIds);
+	}
+
+	public BaseGCMIntentService(final String pServerURL, final UUID pUUID, final String ... pSenderIds) throws IllegalClassNameException {
+		this(pServerURL, pUUID, null, pSenderIds);
+	}
+
+	public BaseGCMIntentService(final String pServerURL, final String pAppID, final String ... pSenderIds) throws IllegalClassNameException {
+		this(pServerURL, null, pAppID, pSenderIds);
+	}
+
+	public BaseGCMIntentService(final String pServerURL, final UUID pUUID, final String pAppID, final String ... pSenderIds) throws IllegalClassNameException {
 		super(pSenderIds);
 
 		this.mServerURL = pServerURL;
-		
+		this.mUUID = pUUID;
+		this.mAppID = pAppID;
+
 		this.ensureClassName();
 	}
 
@@ -62,34 +78,56 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 			throw new IllegalClassNameException("This class has to be named: '" + GCM_INTENTSERVICE_CLASS_NAME + "', not '" + this.getClass().getSimpleName() + "'.");
 		}
 	}
-	
+
 	// ===========================================================
 	// Getter & Setter
 	// ===========================================================
 
 	protected String getServerURL(final Context pContext) throws IllegalStateException {
-        if (this.mServerURL == null) {
-            throw new IllegalStateException("Server URL was not set in constructor!");
-        } else {
-        	return this.mServerURL;
-        }
-    }
+		if (this.mServerURL == null) {
+			throw new IllegalStateException("Server URL was not set in constructor!");
+		} else {
+			return this.mServerURL;
+		}
+	}
+
+	protected UUID getUUID(final Context pContext) throws IllegalStateException {
+		if (this.mUUID == null) {
+			throw new IllegalStateException("UUID was not set in constructor!");
+		} else {
+			return this.mUUID;
+		}
+	}
+
+	protected String getAppID(final Context pContext) {
+		if (this.mAppID == null) {
+			throw new IllegalStateException("AppID was not set in constructor!");
+		} else {
+			return this.mAppID;
+		}
+	}
 
 	// ===========================================================
 	// Methods for/from SuperClass/Interfaces
 	// ===========================================================
 
 	@Override
-	protected void onRegistered(final Context pContext, final String pRegistrationID) {
+	protected void onRegistered(final Context pContext, final String pGCMRegistrationID) {
 		final String serverURL = this.getServerURL(pContext);
-		GCMServerUtils.register(pContext, serverURL, pRegistrationID);
+		final String appID = getAppID(pContext);
+		final UUID uuid = this.getUUID(pContext);
+
+		GCMServerUtils.register(pContext, serverURL, uuid, appID, pGCMRegistrationID);
 	}
 
 	@Override
-	protected void onUnregistered(final Context pContext, final String pRegistrationID) {
+	protected void onUnregistered(final Context pContext, final String pGCMRegistrationID) {
 		if (GCMRegistrar.isRegisteredOnServer(pContext)) {
 			final String serverURL = this.getServerURL(pContext);
-			GCMServerUtils.unregister(pContext, serverURL, pRegistrationID);
+			final String appID = getAppID(pContext);
+			final UUID uuid = this.getUUID(pContext);
+
+			GCMServerUtils.unregister(pContext, serverURL, uuid, appID, pGCMRegistrationID);
 		}
 	}
 

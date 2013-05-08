@@ -12,6 +12,7 @@ public interface ServerConstants {
 	// Constants
 	// ===========================================================
 
+	/* Experiments: */
 	public static final String SERVER_ENDPOINT_EXPERIMENTS = "experiments";
 	public static final String SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_UUID = "uuid";
 	public static final String SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_APP_ID = "app_id";
@@ -28,10 +29,16 @@ public interface ServerConstants {
 	public static final String SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_NETWORK_OPERATOR = "device_network_operator";
 	public static final String SERVER_ENDPOINT_EXPERIMENTS_PARAMETER_DEVICE_SIM_OPERATOR = "device_sim_operator";
 
-	public static final String SERVER_ENDPOINT_REGISTER = "gcm/register";
-	public static final String SERVER_ENDPOINT_UNREGISTER = "gcm/unregister";
-	public static final String SERVER_ENDPOINT_REGISTER_PARAMETER_REGISTRATIONID = "pGCMRegistrationID";
-	public static final String SERVER_ENDPOINT_UNREGISTER_PARAMETER_REGISTRATIONID = "pGCMRegistrationID";
+	/* GCM: */
+	public static final String SERVER_ENDPOINT_GCM_REGISTER = "gcm/register";
+	public static final String SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_UUID = "uuid";
+	public static final String SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_APP_ID = "app_id";
+	public static final String SERVER_ENDPOINT_GCM_REGISTER_PARAMETER_GCM_REGISTRATION_ID = "gcm_registration_id";
+
+	public static final String SERVER_ENDPOINT_GCM_UNREGISTER = "gcm/unregister";
+	public static final String SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_UUID = "uuid";
+	public static final String SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_APP_ID = "app_id";
+	public static final String SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_GCM_REGISTRATION_ID = "gcm_registration_id";
 
 	// ===========================================================
 	// Methods
