@@ -16,6 +16,7 @@ import org.andengine.extension.server.experiment.exception.ExperimentException;
 import org.andengine.extension.server.experiment.exception.ExperimentNotFoundException;
 import org.andengine.extension.server.experiment.exception.ExperimentTypeException;
 import org.andengine.extension.server.util.constants.ServerConstants;
+import org.andengine.util.AsyncTaskUtils;
 import org.andengine.util.StreamUtils;
 import org.andengine.util.call.Callback;
 import org.andengine.util.debug.Debug;
@@ -439,7 +440,7 @@ public class ExperimentManager implements ServerConstants {
 
 	public void fetchExperimentsAsync(final boolean pForce, final Callback<Boolean> pCallback) {
 		final FetchExperimentsAsyncTask fetchExperimentsAsyncTask = new FetchExperimentsAsyncTask(pForce, pCallback);
-		fetchExperimentsAsyncTask.execute((Void[]) null);
+		AsyncTaskUtils.execute(fetchExperimentsAsyncTask);
 	}
 
 	private Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws JSONException {
