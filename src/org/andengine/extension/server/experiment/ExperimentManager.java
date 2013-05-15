@@ -100,7 +100,7 @@ public class ExperimentManager implements ServerConstants {
 		this.mPackageName = SystemUtils.getPackageName(pContext);
 		this.mPackageVersionCode = SystemUtils.getPackageVersionCode(pContext);
 
-		TelephonyManager manager = (TelephonyManager) pContext.getSystemService(Context.TELEPHONY_SERVICE);
+		final TelephonyManager manager = (TelephonyManager) pContext.getSystemService(Context.TELEPHONY_SERVICE);
 		this.mNetworkOperatorName = manager.getNetworkOperatorName();
 		this.mSimOperatorName = manager.getSimOperatorName();
 	}
@@ -443,7 +443,7 @@ public class ExperimentManager implements ServerConstants {
 		AsyncTaskUtils.execute(fetchExperimentsAsyncTask);
 	}
 
-	private Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws JSONException {
+	protected Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws JSONException {
 		final Map<String, Experiment<?>> experiments = new HashMap<String, Experiment<?>>();
 		final JSONArray experimentsJSONArray = new JSONArray(pServerResponse);
 
