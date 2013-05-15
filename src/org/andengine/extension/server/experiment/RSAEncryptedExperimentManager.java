@@ -119,7 +119,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 			serverResponseBytes = this.mCipher.doFinal(encryptedServerResponseBytes);
 		} catch (final IllegalBlockSizeException e) {
 			throw new ExperimentException(e);
-		} catch (BadPaddingException e) {
+		} catch (final BadPaddingException e) {
 			throw new ExperimentException(e);
 		} finally {
 			this.mCipherLock.unlock();
@@ -128,7 +128,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 		final String serverResponse;
 		try {
 			serverResponse = new String(serverResponseBytes, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
+		} catch (final UnsupportedEncodingException e) {
 			throw new ExperimentException(e);
 		}
 
