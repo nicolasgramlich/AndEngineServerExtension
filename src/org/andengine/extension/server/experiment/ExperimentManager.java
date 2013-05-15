@@ -337,7 +337,7 @@ public class ExperimentManager implements ServerConstants {
 				this.mExperiments = this.parseExperiments(this.mExperimentsData);
 				this.mExperimentsFetchedTimestamp = pSharedPreferences.getLong(PREFERENCES_EXPERIMENTMANAGER_EXPERIMENTS_FETCHED_TIMESTAMP_KEY, 0);
 				this.mExperimentsFetched = true;
-			} catch (final JSONException e) {
+			} catch (final ExperimentException e) {
 				return false;
 			}
 		}
@@ -372,7 +372,7 @@ public class ExperimentManager implements ServerConstants {
 						this.mExperimentsFetched = true;
 						this.mExperimentsFetchedTimestamp = System.currentTimeMillis();
 						this.mExperimentsData = serverResponse;
-					} catch (final JSONException e) {
+					} catch (final ExperimentException e) {
 						Debug.e(e);
 					}
 				}
@@ -408,7 +408,7 @@ public class ExperimentManager implements ServerConstants {
 		return params;
 	}
 
-	private boolean shouldFetchExperiments(final boolean pForce) {
+	protected boolean shouldFetchExperiments(final boolean pForce) {
 		if (this.mExperimentsFetching) {
 			return false;
 		} else {
@@ -443,16 +443,28 @@ public class ExperimentManager implements ServerConstants {
 		AsyncTaskUtils.execute(fetchExperimentsAsyncTask);
 	}
 
-	protected Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws JSONException {
+	protected Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws ExperimentException {
 		final Map<String, Experiment<?>> experiments = new HashMap<String, Experiment<?>>();
-		final JSONArray experimentsJSONArray = new JSONArray(pServerResponse);
 
-		for (int i = 0; i < experimentsJSONArray.length(); i++) {
-			final JSONObject experimentJSONObject = experimentsJSONArray.getJSONObject(i);
+		try {
+			final JSONObject serverResponseJSONObject = new JSONObject(pServerResponse);
 
-			final Experiment<?> experiment = this.mExperimentFactory.parseExperiment(experimentJSONObject);
+			final String uuid = serverResponseJSONObject.getString("uuid");
+			if (this.mUUID.toString().equals(uuid) == false) {
+				throw new ExperimentException(new SecurityException("Returned UUID didn't equal the UUID of this device: '" + this.mUUID.toString() + "'."));
+			}
 
-			experiments.put(experiment.getName(), experiment);
+			final JSONArray experimentsJSONArray = serverResponseJSONObject.getJSONArray("experiments");
+
+			for (int i = 0; i < experimentsJSONArray.length(); i++) {
+				final JSONObject experimentJSONObject = experimentsJSONArray.getJSONObject(i);
+
+				final Experiment<?> experiment = this.mExperimentFactory.parseExperiment(experimentJSONObject);
+
+				experiments.put(experiment.getName(), experiment);
+			}
+		} catch (final JSONException e) {
+			throw new ExperimentException(e);
 		}
 
 		return experiments;
