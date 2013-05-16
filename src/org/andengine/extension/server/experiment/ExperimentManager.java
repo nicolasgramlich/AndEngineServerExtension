@@ -126,11 +126,15 @@ public class ExperimentManager implements ServerConstants {
 	}
 
 	public Experiment<?> getExperiment(final String pExperimentName) throws ExperimentNotFoundException {
-		final Experiment<?> experiment = this.mExperiments.get(pExperimentName);
-		if (experiment != null) {
-			return experiment;
+		if (this.mExperiments == null) {
+			throw new ExperimentNotFoundException("Experiments not initialized. Experiment: '" + pExperimentName + "'.");
 		} else {
-			throw new ExperimentNotFoundException("Unexpected experiment: '" + pExperimentName + "'.");
+			final Experiment<?> experiment = this.mExperiments.get(pExperimentName);
+			if (experiment != null) {
+				return experiment;
+			} else {
+				throw new ExperimentNotFoundException("Unexpected experiment: '" + pExperimentName + "'.");
+			}
 		}
 	}
 
