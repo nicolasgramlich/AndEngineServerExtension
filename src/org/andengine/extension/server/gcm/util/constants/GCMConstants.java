@@ -14,6 +14,10 @@ public interface GCMConstants extends ServerConstants {
 	// ===========================================================
 
 	public static final String ACTION_GCM_MESSAGE = "org.andengine.extension.server.gcm.ACTION_GCM_MESSAGE";
+	public static final String ACTION_GCM_MESSAGE_OPEN = "org.andengine.extension.server.gcm.ACTION_GCM_MESSAGE_OPEN";
+	public static final String ACTION_GCM_MESSAGE_DELETE = "org.andengine.extension.server.gcm.ACTION_GCM_MESSAGE_DELETE";
+	public static final String ACTION_GCM_MESSAGE_OPEN_EXTRA_ID = "id";
+	public static final String ACTION_GCM_MESSAGE_DELETE_EXTRA_ID = "id";
 
 	// ===========================================================
 	// Methods
