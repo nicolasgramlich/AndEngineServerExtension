@@ -70,6 +70,20 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 		this.mCipher = this.initCipher(pPublicKeyBase64);
 	}
 
+	/**
+	 * @param pContext
+	 * @param pServerURL
+	 * @param pPublicKeyBase64 Format: <code>X.509</code>
+	 * @param pExperimentFactory
+	 * @param pTimeoutMilliseconds
+	 * @throws SystemUtilsException
+	 */
+	public RSAEncryptedExperimentManager(final Context pContext, final String pServerURL, final String pPublicKeyBase64, final IExperimentFactory pExperimentFactory, final int pTimeoutMilliseconds) throws SystemUtilsException {
+		super(pContext, pServerURL, pExperimentFactory, pTimeoutMilliseconds);
+
+		this.mCipher = this.initCipher(pPublicKeyBase64);
+	}
+
 	private Cipher initCipher(final String pPublicKeyBase64) {
 		try {
 			final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
