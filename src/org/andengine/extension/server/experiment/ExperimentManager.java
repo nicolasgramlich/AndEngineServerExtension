@@ -34,6 +34,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,6 +57,8 @@ public class ExperimentManager implements ServerConstants {
 	// ===========================================================
 	// Constants
 	// ===========================================================
+
+	private static final int TIMEOUT_MILLISECONDS = 20000;
 
 	private static final String PREFERENCES_EXPERIMENTMANAGER_EXPERIMENTS_FETCHED_TIMESTAMP_KEY = "preferences.experimentmanager.experiments.fetched.timestamp";
 	private static final String PREFERENCES_EXPERIMENTMANAGER_EXPERIMENTS_DATA_KEY = "preferences.experimentmanager.experiments.data";
@@ -364,6 +368,9 @@ public class ExperimentManager implements ServerConstants {
 
 				final URI uri = new URI(this.mServerURL + SERVER_ENDPOINT_EXPERIMENTS + "?" + URLEncodedUtils.format(params, "utf-8"));
 				final HttpGet httpGet = new HttpGet(uri);
+				final HttpParams httpParams = httpGet.getParams();
+				HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISECONDS);
+				HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISECONDS);
 
 				final HttpResponse response = httpClient.execute(httpGet);
 
