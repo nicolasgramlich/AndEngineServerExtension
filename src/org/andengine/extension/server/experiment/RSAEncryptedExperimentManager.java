@@ -1,7 +1,9 @@
 package org.andengine.extension.server.experiment;
 
 import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -16,9 +18,14 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.andengine.extension.server.experiment.exception.ExperimentException;
 import org.andengine.util.system.SystemUtils.SystemUtilsException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.content.Context;
 import android.util.Base64;
@@ -38,7 +45,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 	// Fields
 	// ===========================================================
 
-	private final Cipher mCipher;
+	private final Cipher mRSACipher;
 	private final Lock mCipherLock = new ReentrantLock(true);
 
 	// ===========================================================
@@ -54,7 +61,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 	public RSAEncryptedExperimentManager(final Context pContext, final String pServerURL, final String pPublicKeyBase64) throws SystemUtilsException {
 		super(pContext, pServerURL);
 
-		this.mCipher = this.initCipher(pPublicKeyBase64);
+		this.mRSACipher = this.createRSACipher(pPublicKeyBase64);
 	}
 
 	/**
@@ -67,7 +74,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 	public RSAEncryptedExperimentManager(final Context pContext, final String pServerURL, final String pPublicKeyBase64, final IExperimentFactory pExperimentFactory) throws SystemUtilsException {
 		super(pContext, pServerURL, pExperimentFactory);
 
-		this.mCipher = this.initCipher(pPublicKeyBase64);
+		this.mRSACipher = this.createRSACipher(pPublicKeyBase64);
 	}
 
 	/**
@@ -81,10 +88,10 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 	public RSAEncryptedExperimentManager(final Context pContext, final String pServerURL, final String pPublicKeyBase64, final IExperimentFactory pExperimentFactory, final int pTimeoutMilliseconds) throws SystemUtilsException {
 		super(pContext, pServerURL, pExperimentFactory, pTimeoutMilliseconds);
 
-		this.mCipher = this.initCipher(pPublicKeyBase64);
+		this.mRSACipher = this.createRSACipher(pPublicKeyBase64);
 	}
 
-	private Cipher initCipher(final String pPublicKeyBase64) {
+	private Cipher createRSACipher(final String pPublicKeyBase64) {
 		try {
 			final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			final byte[] publicKeyBase64Bytes = pPublicKeyBase64.getBytes("UTF-8");
@@ -93,7 +100,7 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 			final PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
 			final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-			cipher.init(Cipher.DECRYPT_MODE, publicKey);
+			cipher.init(Cipher.UNWRAP_MODE, publicKey);
 
 			return cipher;
 		} catch (final NoSuchAlgorithmException e) {
@@ -118,35 +125,72 @@ public class RSAEncryptedExperimentManager extends ExperimentManager {
 	// ===========================================================
 
 	@Override
-	protected Map<String, Experiment<?>> parseExperiments(final String pEncryptedServerResponseBase64) throws ExperimentException {
-		final byte[] encryptedServerResponseBase64Bytes;
+	protected Map<String, Experiment<?>> parseExperiments(final String pServerResponse) throws ExperimentException {
+		/* UnJSONify all the things: */
+		final JSONObject serverResponseJSONObject;
+		final String rsaEncryptedAESKeyBase64String;
+		final String aesEncryptedExperimentDataBase64String;
+		final String ivBase64String;
 		try {
-			encryptedServerResponseBase64Bytes = pEncryptedServerResponseBase64.getBytes("UTF-8");
-		} catch (final UnsupportedEncodingException e) {
+			serverResponseJSONObject = new JSONObject(pServerResponse);
+
+			rsaEncryptedAESKeyBase64String = serverResponseJSONObject.getString("key");
+			ivBase64String = serverResponseJSONObject.getString("iv");
+			aesEncryptedExperimentDataBase64String = serverResponseJSONObject.getString("data");
+		} catch (final JSONException e) {
 			throw new ExperimentException(e);
 		}
-		final byte[] encryptedServerResponseBytes = Base64.decode(encryptedServerResponseBase64Bytes, Base64.DEFAULT);
 
+		/* Base64 decode all the things: */
+		final byte[] rsaEncryptedAESKeyBytes = RSAEncryptedExperimentManager.base64Decode(rsaEncryptedAESKeyBase64String);
+		final byte[] aesEncryptedExperimentDataBytes = RSAEncryptedExperimentManager.base64Decode(aesEncryptedExperimentDataBase64String);
+		final byte[] ivBytes = RSAEncryptedExperimentManager.base64Decode(ivBase64String);
+
+		/* AES Key: */
+		final Cipher aesCipher;
 		this.mCipherLock.lock();
-		final byte[] serverResponseBytes;
 		try {
-			serverResponseBytes = this.mCipher.doFinal(encryptedServerResponseBytes);
-		} catch (final IllegalBlockSizeException e) {
+			final Key aesKey = this.mRSACipher.unwrap(rsaEncryptedAESKeyBytes, "AES/CBC/PKCS5Padding", Cipher.SECRET_KEY);
+			final IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
+
+			aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+			aesCipher.init(Cipher.DECRYPT_MODE, aesKey, ivSpec);
+		} catch (final NoSuchAlgorithmException e) {
 			throw new ExperimentException(e);
-		} catch (final BadPaddingException e) {
+		} catch (final NoSuchPaddingException e) {
+			throw new ExperimentException(e);
+		} catch (final InvalidKeyException e) {
+			throw new ExperimentException(e);
+		} catch (final InvalidAlgorithmParameterException e) {
 			throw new ExperimentException(e);
 		} finally {
 			this.mCipherLock.unlock();
 		}
 
-		final String serverResponse;
+		/* Experiment Data: */
+		final String experimentData;
 		try {
-			serverResponse = new String(serverResponseBytes, "UTF-8");
+			final byte[] experimentDataBytes = aesCipher.doFinal(aesEncryptedExperimentDataBytes);
+			experimentData = new String(experimentDataBytes, "UTF-8");
 		} catch (final UnsupportedEncodingException e) {
+			throw new ExperimentException(e);
+		} catch (final IllegalBlockSizeException e) {
+			throw new ExperimentException(e);
+		} catch (final BadPaddingException e) {
 			throw new ExperimentException(e);
 		}
 
-		return super.parseExperiments(serverResponse);
+		return super.parseExperiments(experimentData);
+	}
+
+	private static byte[] base64Decode(final String pBase64String) throws ExperimentException {
+		final byte[] base64Bytes;
+		try {
+			base64Bytes = pBase64String.getBytes("UTF-8");
+		} catch (final UnsupportedEncodingException e) {
+			throw new ExperimentException(e);
+		}
+		return Base64.decode(base64Bytes, Base64.DEFAULT);
 	}
 
 	// ===========================================================
