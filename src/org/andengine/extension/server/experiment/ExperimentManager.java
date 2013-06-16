@@ -58,7 +58,7 @@ public class ExperimentManager implements ServerConstants {
 	// Constants
 	// ===========================================================
 
-	private static final int TIMEOUT_MILLISECONDS = 20000;
+	private static final int TIMEOUT_MILLISECONDS_DEFAULT = 20000;
 
 	private static final String PREFERENCES_EXPERIMENTMANAGER_EXPERIMENTS_FETCHED_TIMESTAMP_KEY = "preferences.experimentmanager.experiments.fetched.timestamp";
 	private static final String PREFERENCES_EXPERIMENTMANAGER_EXPERIMENTS_DATA_KEY = "preferences.experimentmanager.experiments.data";
@@ -70,6 +70,7 @@ public class ExperimentManager implements ServerConstants {
 	private final Context mContext;
 	private final String mServerURL;
 	private final IExperimentFactory mExperimentFactory;
+	private final int mTimeoutMilliseconds;
 
 	private final UUID mUUID;
 	private final String mPackageName;
@@ -96,6 +97,10 @@ public class ExperimentManager implements ServerConstants {
 	}
 
 	public ExperimentManager(final Context pContext, final String pServerURL, final IExperimentFactory pExperimentFactory) throws SystemUtilsException {
+		this(pContext, pServerURL, pExperimentFactory, TIMEOUT_MILLISECONDS_DEFAULT);
+	}
+
+	public ExperimentManager(final Context pContext, final String pServerURL, final IExperimentFactory pExperimentFactory, final int pTimeoutMilliseconds) throws SystemUtilsException {
 		this.mContext = pContext;
 		this.mServerURL = pServerURL;
 		this.mExperimentFactory = pExperimentFactory;
@@ -107,6 +112,7 @@ public class ExperimentManager implements ServerConstants {
 		final TelephonyManager manager = (TelephonyManager) pContext.getSystemService(Context.TELEPHONY_SERVICE);
 		this.mNetworkOperatorName = manager.getNetworkOperatorName();
 		this.mSimOperatorName = manager.getSimOperatorName();
+		this.mTimeoutMilliseconds = pTimeoutMilliseconds;
 	}
 
 	// ===========================================================
@@ -369,8 +375,8 @@ public class ExperimentManager implements ServerConstants {
 				final URI uri = new URI(this.mServerURL + SERVER_ENDPOINT_EXPERIMENTS + "?" + URLEncodedUtils.format(params, "utf-8"));
 				final HttpGet httpGet = new HttpGet(uri);
 				final HttpParams httpParams = httpGet.getParams();
-				HttpConnectionParams.setConnectionTimeout(httpParams, TIMEOUT_MILLISECONDS);
-				HttpConnectionParams.setSoTimeout(httpParams, TIMEOUT_MILLISECONDS);
+				HttpConnectionParams.setConnectionTimeout(httpParams, this.mTimeoutMilliseconds);
+				HttpConnectionParams.setSoTimeout(httpParams, this.mTimeoutMilliseconds);
 
 				final HttpResponse response = httpClient.execute(httpGet);
 
