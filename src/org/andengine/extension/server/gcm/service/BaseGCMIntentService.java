@@ -117,7 +117,12 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 		final String appID = getAppID(pContext);
 		final UUID uuid = this.getUUID(pContext);
 
-		GCMServerUtils.register(pContext, serverURL, uuid, appID, pGCMRegistrationID);
+		final boolean registered = GCMServerUtils.register(pContext, serverURL, uuid, appID, pGCMRegistrationID);
+
+		/* If it failed, unregister from GCM itself, so it will be retried next startup: */
+		if (!registered) {
+			GCMRegistrar.unregister(pContext);
+		}
 	}
 
 	@Override
@@ -127,7 +132,12 @@ public abstract class BaseGCMIntentService extends GCMBaseIntentService implemen
 			final String appID = getAppID(pContext);
 			final UUID uuid = this.getUUID(pContext);
 
-			GCMServerUtils.unregister(pContext, serverURL, uuid, appID, pGCMRegistrationID);
+			final boolean unregistered = GCMServerUtils.unregister(pContext, serverURL, uuid, appID, pGCMRegistrationID);
+
+			/* If it failed, pretend it succeeded, because a (potential) dupe registration is not as bad as missing one: */
+			if (!unregistered) {
+				GCMRegistrar.setRegisteredOnServer(pContext, false);
+			}
 		}
 	}
 

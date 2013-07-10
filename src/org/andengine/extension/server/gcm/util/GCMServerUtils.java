@@ -12,6 +12,7 @@ import org.andengine.extension.server.gcm.util.constants.GCMConstants;
 import org.andengine.util.math.MathUtils;
 import org.andengine.util.net.HttpClientUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -72,19 +73,22 @@ public final class GCMServerUtils implements GCMConstants {
 
 		for (int i = 0; i < GCMServerUtils.RETRY_COUNT; i++) {
 			try {
-				GCMServerUtils.post(serverUrl, params);
-				GCMRegistrar.setRegisteredOnServer(pContext, true);
-				return true;
-			} catch (final IOException e) {
-				if (i < GCMServerUtils.RETRY_COUNT) {
-					try {
-						Thread.sleep(backoff);
-					} catch (final InterruptedException e1) {
-						Thread.currentThread().interrupt();
-						return false;
-					}
-					backoff *= 2;
+				if (GCMServerUtils.post(serverUrl, params) == HttpStatus.SC_OK) {
+					GCMRegistrar.setRegisteredOnServer(pContext, true);
+					return true;
 				}
+			} catch (final IOException e) {
+				/* Handled below: */
+			}
+
+			if (i < GCMServerUtils.RETRY_COUNT) {
+				try {
+					Thread.sleep(backoff);
+				} catch (final InterruptedException e1) {
+					Thread.currentThread().interrupt();
+					return false;
+				}
+				backoff *= 2;
 			}
 		}
 		return false;
@@ -99,12 +103,14 @@ public final class GCMServerUtils implements GCMConstants {
 		params.put(GCMServerUtils.SERVER_ENDPOINT_GCM_UNREGISTER_PARAMETER_GCM_REGISTRATION_ID, pGCMRegistrationID);
 
 		try {
-			GCMServerUtils.post(serverUrl, params);
-			GCMRegistrar.setRegisteredOnServer(pContext, false);
-			return true;
-		} catch (final IOException e) {
-			return false;
+			if (GCMServerUtils.post(serverUrl, params) == HttpStatus.SC_OK) {
+				GCMRegistrar.setRegisteredOnServer(pContext, false);
+				return true;
+			}
+		} catch (final Exception e) {
+			/* Handled below: */
 		}
+		return false;
 	}
 
 	private static int post(final String pServerURL, final Map<String, String> pParameters) throws IOException {
